@@ -66,7 +66,6 @@ export class PdfRenderer implements Renderer2 {
             // Only draw text if we have a non-empty value
             if (value && value.trim().length > 0) {
 
-                const { _, height } = this.page.getSize()
                 const fontSize = 14
 
                 // Draw the text at the current cursor position
@@ -78,7 +77,7 @@ export class PdfRenderer implements Renderer2 {
                     color: rgb(0, 0, 0),
                 });
                 // Move the cursor down for the next line of text
-                this.cursorY -= height - 2 * fontSize; // Move down for the next line
+                this.cursorY -= fontSize * 1.5; // Move down by 1.5 times the font size for proper spacing
 
             } else {
                 // If the value is empty, just log a warning and do not draw anything
