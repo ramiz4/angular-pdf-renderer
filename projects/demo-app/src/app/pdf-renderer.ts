@@ -57,28 +57,76 @@ export class PdfRenderer implements Renderer2 {
         await this.ensureInitialized();
 
         if (node.type === 'element') {
+            // Handle element types differently based on the node type (h1, p, etc.)
+            const elementType = node.type === 'element' ? node.attributes?.['name'] || 'div' : node.type;
+            
             // Handle element rendering
             for (const child of node.children) {
                 // Use child.value if it exists, otherwise pass the 'value' parameter
                 await this.setValue(child, child.value || value);
             }
+            
+            // Add extra spacing after block elements
+            if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'div'].includes(elementType)) {
+                // Add additional spacing after block elements
+                this.cursorY -= 10; // Extra spacing between paragraphs
+            }
         } else if (node.type === 'text') {
             // Only draw text if we have a non-empty value
             if (value && value.trim().length > 0) {
+                // Determine font size based on parent element type (if available)
+                let fontSize = 14; // Default font size
+                if (node.parent?.type === 'element') {
+                    // Apply different font sizes based on element type
+                    if (node.parent.attributes?.['name'] === 'h1') {
+                        fontSize = 24;
+                    } else if (node.parent.attributes?.['name'] === 'h2') {
+                        fontSize = 20;
+                    } else if (node.parent.attributes?.['name'] === 'h3') {
+                        fontSize = 18;
+                    }
+                }
 
-                const fontSize = 14
-
-                // Draw the text at the current cursor position
-                await this.page.drawText(value, {
-                    x: 50,
-                    y: this.cursorY, // Adjust Y position for the text
-                    size: fontSize,
-                    font: this.font,
-                    color: rgb(0, 0, 0),
-                });
-                // Move the cursor down for the next line of text
-                this.cursorY -= fontSize * 1.5; // Move down by 1.5 times the font size for proper spacing
-
+                // Handle multi-line text
+                const words = value.split(' ');
+                let line = '';
+                const maxWidth = this.page.getSize().width - 100; // Leave margins
+                
+                for (let i = 0; i < words.length; i++) {
+                    const testLine = line + words[i] + ' ';
+                    const textWidth = this.font.widthOfTextAtSize(testLine, fontSize);
+                    
+                    if (textWidth > maxWidth && i > 0) {
+                        // Draw the line at the current cursor position
+                        this.page.drawText(line, {
+                            x: 50,
+                            y: this.cursorY,
+                            size: fontSize,
+                            font: this.font,
+                            color: rgb(0, 0, 0),
+                        });
+                        
+                        // Move to the next line
+                        this.cursorY -= fontSize * 1.2;
+                        line = words[i] + ' ';
+                    } else {
+                        line = testLine;
+                    }
+                }
+                
+                // Draw any remaining text
+                if (line.trim().length > 0) {
+                    this.page.drawText(line, {
+                        x: 50,
+                        y: this.cursorY,
+                        size: fontSize,
+                        font: this.font,
+                        color: rgb(0, 0, 0),
+                    });
+                    
+                    // Move the cursor down for the next line of text
+                    this.cursorY -= fontSize * 1.2;
+                }
             } else {
                 // If the value is empty, just log a warning and do not draw anything
                 console.warn(`[PdfRenderer] Empty value provided for text node. Skipping rendering.`);
