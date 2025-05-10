@@ -10,32 +10,20 @@ export class PdfRenderer extends AbstractRenderer {
 
     constructor() {
         super();
-        // Store the init promise reference so we can await it in other methods
         this.init();
-    }
-
-    getPdfDoc() {
-        return this.pdfDoc;
     }
 
     override async init(): Promise<void> {
         try {
+
+            if (this.initialized) {
+                console.warn(`[PdfRenderer] PDF Document already initialized. Skipping initialization.`);
+                return;
+            }
+
             this.pdfDoc = await PDFDocument.create();
             this.page = this.pdfDoc.addPage(PageSizes.A4);
-            const { height } = this.page.getSize()
-            const fontSize = 30
             this.font = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
-
-            // Add debug watermark to confirm initialization
-            this.page.drawText('PDF Renderer Initialized', {
-                x: 50,
-                y: height - 2 * fontSize,
-                size: fontSize,
-                font: this.font,
-                color: rgb(0, 0.53, 0.7),
-            });
-
-            this.cursorY = height - 3 * fontSize; // Set initial cursor position
 
             this.initialized = true;
 
@@ -48,38 +36,27 @@ export class PdfRenderer extends AbstractRenderer {
         }
     }
 
-    override async saveOutput(): Promise<Uint8Array> {
-        console.warn(`[PdfRenderer] Saving PDF...`);
-        await this.ensureInitialized();
-
-        // Save the PDF document
-        const bytes = await this.pdfDoc.save();
-        console.log(`[PdfRenderer] PDF saved successfully.`);
-        return bytes;
-    }
-
     /**
      * Displays the PDF in the iframe that was created by selectRootElement
      */
-    async displayPdf(): Promise<void> {
+    private async displayPdf(): Promise<void> {
         console.log('[PdfRenderer] Displaying PDF in iframe');
-        await this.ensureInitialized();
-        
+
         // Get the PDF bytes
-        const bytes = await this.saveOutput();
-        
+        const bytes = await this.pdfDoc.save();
+
         // Create a blob and URL
         const blob = new Blob([bytes], { type: 'application/pdf' });
         const url = URL.createObjectURL(blob);
-        
+
         // Find the iframe (ensure it exists)
         this.iframe = document.getElementById('pdf-iframe') as HTMLIFrameElement;
-        
+
         if (!this.iframe) {
             console.error('[PdfRenderer] Failed to find pdf-iframe element');
             return;
         }
-        
+
         // Set the source and log info when loaded
         this.iframe.src = url;
         this.iframe.onload = () => {
@@ -111,6 +88,8 @@ export class PdfRenderer extends AbstractRenderer {
             if (value && value.trim().length > 0) {
                 // Determine font size based on parent element type (if available)
                 let fontSize = 14; // Default font size
+                let textColor = rgb(0, 0, 0); // Default color (black)
+
                 if (node.parent?.type === 'element') {
                     // Apply different font sizes based on element type
                     if (node.parent.attributes?.['name'] === 'h1') {
@@ -119,6 +98,26 @@ export class PdfRenderer extends AbstractRenderer {
                         fontSize = 20;
                     } else if (node.parent.attributes?.['name'] === 'h3') {
                         fontSize = 18;
+                    }
+
+                    // Apply text color if specified in parent's style
+                    if (node.parent.styles?.color) {
+                        const color = node.parent.styles.color.trim().toLowerCase();
+                        if (color === 'red') {
+                            textColor = rgb(1, 0, 0); // Red color
+                        } else if (color.startsWith('#')) {
+                            // Handle hex colors (basic implementation)
+                            try {
+                                const hex = color.substring(1);
+                                const r = parseInt(hex.substring(0, 2), 16) / 255;
+                                const g = parseInt(hex.substring(2, 4), 16) / 255;
+                                const b = parseInt(hex.substring(4, 6), 16) / 255;
+                                textColor = rgb(r, g, b);
+                            } catch (e) {
+                                console.warn(`[PdfRenderer] Failed to parse color: ${color}`);
+                            }
+                        }
+                        // Add more color handling as needed
                     }
                 }
 
@@ -138,7 +137,7 @@ export class PdfRenderer extends AbstractRenderer {
                             y: this.cursorY,
                             size: fontSize,
                             font: this.font,
-                            color: rgb(0, 0, 0),
+                            color: textColor,
                         });
 
                         // Move to the next line
@@ -156,7 +155,7 @@ export class PdfRenderer extends AbstractRenderer {
                         y: this.cursorY,
                         size: fontSize,
                         font: this.font,
-                        color: rgb(0, 0, 0),
+                        color: textColor,
                     });
 
                     // Move the cursor down for the next line of text
@@ -205,12 +204,30 @@ export class PdfRenderer extends AbstractRenderer {
         if (el && typeof el === 'object') {
             el.attributes = el.attributes || {};
             el.attributes[name] = value;
+
+            // Parse style attribute to extract individual CSS properties
+            if (name === 'style') {
+                el.styles = el.styles || {};
+                const stylePairs = value.split(';');
+
+                for (const pair of stylePairs) {
+                    const [propName, propValue] = pair.split(':').map(s => s.trim());
+                    if (propName && propValue) {
+                        el.styles[propName] = propValue;
+                    }
+                }
+            }
         }
     }
 
     override removeAttribute(el: any, name: string, namespace?: string | null): void {
         if (el && el.attributes) {
             delete el.attributes[name];
+
+            // Clear style properties if style attribute is removed
+            if (name === 'style' && el.styles) {
+                el.styles = {};
+            }
         }
     }
 }

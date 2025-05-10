@@ -24,11 +24,6 @@ export abstract class AbstractRenderer implements Renderer2 {
     }
 
     /**
-     * Save the rendered output in the format appropriate for the target platform
-     */
-    abstract saveOutput(): Promise<any>;
-
-    /**
      * Set a value in the rendered output
      * Implementation varies by renderer
      */
