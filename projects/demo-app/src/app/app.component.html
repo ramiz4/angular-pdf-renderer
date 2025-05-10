@@ -1,3 +1,20 @@
 <h1>Welcome to {{ title }}!</h1>
 <p>{{ description }}</p>
 <p>Current date and time: {{ currentDate | date:'fullDate' }}</p>
+
+<h2>Data from the API:</h2>
+<ul>
+  <li *ngFor="let item of apiData">
+    {{ item.name }} - {{ item.description }}
+  </li>
+</ul>
+
+<p>Click the button to fetch data from the API:</p>
+
+<div>Lorem ipsum dolor sit amet consectetur adipisicing elit.</div>
+
+<button (click)="fetchData()">Fetch Data</button>
+
+<p *ngIf="loading">Loading...</p>
+
+<p *ngIf="error" style="color: red;">Error: {{ error }}</p>

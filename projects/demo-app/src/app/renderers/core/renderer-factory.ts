@@ -15,21 +15,6 @@ export enum RendererType {
 }
 
 /**
- * Interface for renderer factories that create specific renderer instances
- */
-export interface IRendererFactory {
-    /**
-     * Creates a renderer of the specific type
-     */
-    createRenderer(hostElement: any, type: RendererType2 | null): AbstractRenderer;
-
-    /**
-     * The type of renderer this factory creates
-     */
-    readonly rendererType: RendererType;
-}
-
-/**
  * Abstract factory for creating renderer instances
  * This class provides a foundation for platform-specific renderer factories
  */

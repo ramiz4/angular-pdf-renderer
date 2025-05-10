@@ -6,12 +6,12 @@ export class PdfRenderer extends AbstractRenderer {
     private page: any;
     private font: any;
     private cursorY = 800;
-    private initPromise: Promise<void>;
+    private iframe: HTMLIFrameElement | null = null;
 
     constructor() {
         super();
         // Store the init promise reference so we can await it in other methods
-        this.initPromise = this.init();
+        this.init();
     }
 
     getPdfDoc() {
@@ -22,7 +22,7 @@ export class PdfRenderer extends AbstractRenderer {
         try {
             this.pdfDoc = await PDFDocument.create();
             this.page = this.pdfDoc.addPage(PageSizes.A4);
-            const { _, height } = this.page.getSize()
+            const { height } = this.page.getSize()
             const fontSize = 30
             this.font = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
 
@@ -38,6 +38,9 @@ export class PdfRenderer extends AbstractRenderer {
             this.cursorY = height - 3 * fontSize; // Set initial cursor position
 
             this.initialized = true;
+
+            this.displayPdf(); // Call displayPdf to show the PDF in the iframe
+
             console.log(`[PdfRenderer] PDF Document initialized successfully.`);
         } catch (error) {
             console.error(`[PdfRenderer] Initialization failed:`, error);
@@ -53,6 +56,36 @@ export class PdfRenderer extends AbstractRenderer {
         const bytes = await this.pdfDoc.save();
         console.log(`[PdfRenderer] PDF saved successfully.`);
         return bytes;
+    }
+
+    /**
+     * Displays the PDF in the iframe that was created by selectRootElement
+     */
+    async displayPdf(): Promise<void> {
+        console.log('[PdfRenderer] Displaying PDF in iframe');
+        await this.ensureInitialized();
+        
+        // Get the PDF bytes
+        const bytes = await this.saveOutput();
+        
+        // Create a blob and URL
+        const blob = new Blob([bytes], { type: 'application/pdf' });
+        const url = URL.createObjectURL(blob);
+        
+        // Find the iframe (ensure it exists)
+        this.iframe = document.getElementById('pdf-iframe') as HTMLIFrameElement;
+        
+        if (!this.iframe) {
+            console.error('[PdfRenderer] Failed to find pdf-iframe element');
+            return;
+        }
+        
+        // Set the source and log info when loaded
+        this.iframe.src = url;
+        this.iframe.onload = () => {
+            const pageCount = this.pdfDoc.getPageCount();
+            console.log(`[PdfRenderer] PDF has ${pageCount} pages and is now displayed.`);
+        };
     }
 
     override async setValue(node: any, value: string): Promise<void> {
