@@ -4,18 +4,18 @@ body {
     padding: 0;
     height: 100%;
     font-family: Arial, sans-serif;
-}
 
-.container {
-    display: grid;
-    justify-content: center; 
-    align-items: center; 
-    height: 100vh;
-    background-color: #e0e0e0;
-
-    #pdf-iframe {
-        border: none;
-        width: 100vw;
+    .container {
+        display: grid;
+        justify-content: center;
+        align-items: center;
         height: 100vh;
+        background-color: #e0e0e0;
+
+        #pdf-iframe {
+            border: none;
+            width: 100vw;
+            height: 100vh;
+        }
     }
 }
