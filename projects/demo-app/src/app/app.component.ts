@@ -28,6 +28,11 @@ export class AppComponent implements AfterViewInit {
 
     // render the PDF in the iframe
     const iframe = document.getElementById('pdf-iframe') as HTMLIFrameElement;
+
+    if (!iframe) {
+      return;
+    }
+
     iframe.src = url;
     iframe.onload = () => {
       const pdfDoc = this.pdfRendererService.renderer.getPdfDoc();
