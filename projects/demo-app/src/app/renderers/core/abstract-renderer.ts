@@ -8,6 +8,7 @@ import { ListenerOptions, Renderer2, RendererStyleFlags2 } from '@angular/core';
 export abstract class AbstractRenderer implements Renderer2 {
     // Common properties for all renderers
     protected initialized = false;
+    private _initializationPromise: Promise<void> | null = null;
 
     /**
      * Initialize the renderer with platform-specific resources
@@ -18,8 +19,28 @@ export abstract class AbstractRenderer implements Renderer2 {
      * Ensure the renderer has been initialized
      */
     protected async ensureInitialized(): Promise<void> {
+        // Add a guard to prevent concurrent initialization
+        if (this._initializationPromise) {
+            // If initialization is already in progress, wait for it to complete
+            await this._initializationPromise;
+            return;
+        }
+
         if (!this.initialized) {
-            await this.init();
+            console.log(`[${this.constructor.name}] Initializing...`);
+
+            // Create a promise to track initialization
+            this._initializationPromise = this.init().finally(() => {
+                // Clear the promise when initialization completes or fails
+                this._initializationPromise = null;
+            });
+
+            // Wait for initialization to complete
+            await this._initializationPromise;
+        }
+
+        if (!this.initialized) {
+            throw new Error(`[${this.constructor.name}] Failed to initialize`);
         }
     }
 

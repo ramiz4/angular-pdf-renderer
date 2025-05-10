@@ -27,7 +27,7 @@ export class PdfRenderer extends AbstractRenderer {
 
             this.initialized = true;
 
-            this.displayPdf(); // Call displayPdf to show the PDF in the iframe
+            this.displayPdf();
 
             console.log(`[PdfRenderer] PDF Document initialized successfully.`);
         } catch (error) {
@@ -188,14 +188,14 @@ export class PdfRenderer extends AbstractRenderer {
     }
 
     override selectRootElement(selectorOrNode: string | any, preserveContent?: boolean) {
-        const div = document.createElement('div');
-        div.innerHTML = `
-        <div class="container">
-            <iframe id="pdf-iframe"></iframe>
-        </div>
-        `;
-        document.body.appendChild(div);
-        console.warn(`[PdfRenderer] Root element selected: ${selectorOrNode}`);
+        const rootElement = document.getElementsByTagName(selectorOrNode)[0];
+        rootElement.setAttribute('class', 'container');
+        
+        const iframe = document.createElement('iframe');
+        iframe.setAttribute('id', 'pdf-iframe');
+
+        rootElement.appendChild(iframe);
+        console.log(`[PdfRenderer] Root element selected: ${selectorOrNode}`);
         return { type: 'root', children: [] };
     }
 

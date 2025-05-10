@@ -8,13 +8,12 @@ export class PdfRendererFactory extends AbstractRendererFactory {
     override createRenderer(hostElement: any, type: RendererType2 | null): PdfRenderer {
         // Return cached instance if it exists
         if (this.renderer) {
-            console.info(`[PdfRendererFactory] Returning existing renderer instance`);
             return this.renderer;
         }
 
         // Create new instance and cache it
         this.renderer = new PdfRenderer();
-        console.info(`[PdfRendererFactory] Created new PDF renderer instance`);
+        console.log(`[PdfRendererFactory] Created new PDF renderer instance`);
         return this.renderer;
     }
 
