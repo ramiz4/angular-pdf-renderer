@@ -1,6 +1,8 @@
-<h1>Welcome to {{ title }}!</h1>
-<p>{{ description }}</p>
-<p>Current date and time: {{ currentDate | date:'fullDate' }}</p>
+<h1 style="color: blue;">Welcome to {{ title }}!</h1>
+
+<p style="margin: 40px 0; border-left: 2px solid blue; padding-left: 10px;">{{ description }}</p>
+
+<p style="margin-top: 50px; background-color: #f0f0f0; padding: 10px;">Current date and time: {{ currentDate | date:'fullDate' }}</p>
 
 <h2>Data from the API:</h2>
 <ul>
@@ -11,7 +13,7 @@
 
 <p>Click the button to fetch data from the API:</p>
 
-<div>Lorem ipsum dolor sit amet consectetur adipisicing elit.</div>
+<div style="margin: 30px 0;">Lorem ipsum dolor sit amet consectetur adipisicing elit.</div>
 
 <button (click)="fetchData()">Fetch Data</button>
 
