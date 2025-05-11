@@ -140,9 +140,8 @@ export class MyNewRenderer extends AbstractRenderer {
 
 ## 📚 Additional Resources
 
-- [Angular Renderer2 Documentation](https://angular.io/api/core/Renderer2)
+- [Angular Renderer2 Documentation](https://angular.dev/api/core/Renderer2)
 - [pdf-lib Documentation](https://pdf-lib.js.org/)
-- [Angular Custom Rendering Concepts](https://angular.io/guide/rendering)
 
 <div align="center">
 
